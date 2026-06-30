@@ -29,13 +29,27 @@ router.get('/student/:studentId', validateParams({ studentId: sessionReportZodSc
   }
 })
 
-router.delete('/:id', validateParams({ id: sessionReportZodSchemas.CreateSessionReportDTO.shape.id }), async (req, res) => {
+ router.delete('/:id', validateParams({ id: sessionReportZodSchemas.CreateSessionReportDTO.shape.id }), async (req, res) => {
   try {
     const sessionReport = await deleteSessionReport(req.params.id)
     res.json({ message: 'Session report deleted successfully', sessionReport })
   } catch (error) {
     if (error.message === 'Session report not found') {
       return res.status(404).json({ error: 'Session report not found' })
+    }
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// GET /api/students/:id/history - Get student's recent sessions
+router.get('/students/:id/history', validateParams({ id: sessionReportZodSchemas.CreateSessionReportDTO.shape.id }), async (req, res) => {
+  try {
+    const { HistoryService } = await import('../services/history.service')
+    const history = await HistoryService.getRecentSessions(req.params.id)
+    res.json(history)
+  } catch (error) {
+    if (error.message === 'Student not found') {
+      return res.status(404).json({ error: 'Student not found' })
     }
     res.status(500).json({ error: error.message })
   }
