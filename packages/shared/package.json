@@ -1,0 +1,13 @@
+{
+  "name": "gym-app-shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "lint": "eslint .",
+    "env:validate": "node scripts/validate-env.js",
+    "prebuild": "yarn env:validate"
+  }
+}

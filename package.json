@@ -1,0 +1,37 @@
+{
+  "name": "gym-app",
+  "version": "1.0.0",
+  "description": "Gimnasios App - Sistema de gestión de rutinas para gimnasios",
+  "private": true,
+  "packageManager": "yarn@4.9.4",
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn backend:dev\" \"yarn frontend:dev\"",
+    "build": "concurrently \"yarn backend:build\" \"yarn frontend:build\"",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:up:dev": "docker compose -f docker-compose.yml up -d",
+    "docker:up:test": "docker compose -f docker-compose.test.yml up -d",
+    "docker:logs": "docker compose logs -f",
+    "db:generate": "cd apps/backend && yarn db:generate",
+    "db:migrate": "cd apps/backend && yarn db:migrate",
+    "db:seed": "cd apps/backend && yarn db:seed",
+    "test": "cd apps/backend && yarn test",
+    "test:phase1": "cd apps/backend && vitest run tests/phase1",
+    "test:phase2": "cd apps/backend && vitest run tests/phase2",
+    "test:phase3": "cd apps/backend && vitest run tests/phase3",
+    "test:phase4": "cd apps/backend && vitest run tests/phase4",
+    "test:phase5": "cd apps/backend && vitest run tests/phase5",
+    "lint": "cd apps/backend && yarn lint && cd apps/frontend && yarn lint",
+    "typecheck": "cd apps/backend && yarn typecheck && cd apps/frontend && yarn typecheck && cd packages/shared && yarn typecheck",
+    "env:validate": "cd packages/shared && yarn env:validate",
+    "health:check": "cd apps/backend && node scripts/health-check.js"
+  },
+  "resolutions": {
+    "typescript": "^5.8.2"
+  }
+}
