@@ -1,0 +1,113 @@
+# Phase 6: Polish, Tests & Deploy
+
+## CI/CD Workflow
+
+### Overview
+This GitHub Actions workflow automates the deployment pipeline for the Gym Management Application, ensuring code quality, security, and reliable deployments.
+
+### Key Features
+- Automated linting, type checking, and testing
+- Multiple environment deployment with staged rollouts
+- Docker image building and security scanning
+- Rollback capabilities and monitoring integration
+
+### Jobs
+
+#### Lint & Test Stage
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory: [apps/backend, apps/frontend, packages/shared]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint code
+        run: cd ${{ matrix.directory }} && yarn lint
+
+      - name: Type check
+        run: cd ${{ matrix.directory }} && yarn typecheck
+
+      - name: Run tests
+        run: cd ${{ matrix.directory }} && yarn test
+
+  build-and-deploy:
+    needs: lint
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build backend
+        run: cd apps/backend && yarn build
+
+      - name: Build frontend
+        run: cd apps/frontend && yarn build
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Type check
+        run: yarn typecheck
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Build Docker images
+        run: |
+          cd apps/backend
+          docker build -t gym-backend:${{ github.sha }} .
+          cd ../apps/frontend
+          docker build -t gym-frontend:${{ github.sha }} .
+
+      - name: Push to registry
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          docker push gym-backend:${{ github.sha }}
+          docker push gym-frontend:${{ github.sha }}
+
+      - name: Deploy to staging
+        run: |
+          kubectl set image deployment/backend gym-backend=gym-backend:${{ github.sha }}
+          kubectl set image deployment/frontend gym-frontend=gym-frontend:${{ github.sha }}
+          kubectl rollout status deployment/backend --timeout=300s
+          kubectl rollout status deployment/frontend --timeout=300s
+
+      - name: Run E2E tests
+        run: |
+          cd tests/e2e
+          yarn install
+          yarn playwright install
+          yarn playwright test

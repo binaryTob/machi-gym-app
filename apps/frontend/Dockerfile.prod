@@ -1,0 +1,59 @@
+# production-ready Docker multi-stage build for frontend
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package files
+COPY apps/frontend/package.json apps/frontend/package-lock.json* apps/frontend/yarn.lock* ./
+
+# Install all dependencies including dev
+RUN yarn install --frozen-lockfile
+
+# Copy source files
+COPY apps/frontend/ .
+
+# Build the application
+RUN yarn build
+
+# Production stage - use nginx
+FROM nginx:alpine
+
+# Copy built application from build stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Add non-root user for security
+RUN addgroup -g 1001 nginxgroup && \
+    adduser -u 1001 -g 1001 -s /bin/sh nginxuser && \
+    chown -R nginxuser:nginxgroup /usr/share/nginx/html && \
+    chown -R nginxuser:nginxgroup /var/log/nginx
+
+# Remove default nginx configuration
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Change ownership and create necessary directories
+RUN mkdir -p /var/cache/nginx && mkdir -p /var/log/nginx && \
+    chown -R nginxuser:nginxgroup /var/cache/nginx /var/log/nginx
+
+# Switch to non-root user
+USER 1001
+
+# Expose port 80
+EXPOSE 80
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+
+# Labels for better observability
+LABEL org.opencontainers.image.authors="team@gymapp.com" \
+      org.opencontainers.image.vendor="GymApp" \
+      org.opencontainers.image.title="Gym Frontend" \
+      org.opencontainers.image.description="Frontend application for Gym Management" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.documentation="https://docs.gymapp.com/frontend"

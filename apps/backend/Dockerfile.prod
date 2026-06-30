@@ -1,0 +1,54 @@
+# production-ready Docker multi-stage build for backend
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY apps/backend/package.json apps/backend/package-lock.json* apps/backend/yarn.lock* ./
+
+# Install dependencies (including dev dependencies)
+RUN yarn install --frozen-lockfile
+
+# Copy source files
+COPY apps/backend/ .
+
+# Build the application
+RUN yarn build
+
+# Production stage - final image
+FROM gcr.io/distroless/nodejs20 AS production
+
+# Add non-root user for security
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --gid 1001 appuser
+
+WORKDIR /app
+
+# Copy built application from builder stage
+COPY --from=builder --chown=appuser:appgroup /app/dist ./
+
+# Copy package files for runtime dependencies
+COPY apps/backend/package.json apps/backend/package-lock.json* apps/backend/yarn.lock* ./
+
+# Install only production dependencies
+RUN yarn install --frozen-lockfile --production
+
+# Change ownership to non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER 1001
+
+# Health check endpoint
+EXPOSE 4000
+
+# Start the application
+CMD ["node", "dist/main.js"]
+
+# Labels for better observability
+LABEL org.opencontainers.image.authors="team@gymapp.com" \
+      org.opencontainers.image.vendor="GymApp" \
+      org.opencontainers.image.title="Gym Backend" \
+      org.opencontainers.image.description="Backend service for Gym Management Application" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.documentation="https://docs.gymapp.com/backend"
