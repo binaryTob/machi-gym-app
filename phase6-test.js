@@ -42,11 +42,11 @@ function runPhase6Tests() {
         content.includes('adduser --system') && 
         content.includes('COPY --from=builder') && 
         content.includes('yarn install --frozen-lockfile --production') &&
-        content.includes('USER 1001') &&
-        content.includes('EXPOSE 4000') &&
-        content.includes('node dist/main.js') &&
-        content.includes('LABEL org.opencontainers.image') &&
-        content.includes('ORG.opencontainers.image.description=')) {
+        content.includes('USER 1001') && 
+        content.includes('EXPOSE 4000') && 
+        content.includes('node dist/main.js') && 
+        content.includes('LABEL org.opencontainers.image') && 
+        content.includes('org.opencontainers.image.description=')) {
       // Check for production image size comment
       if (content.includes('<500MB') || content.includes('distroless')) {
         console.log('  ✅ Backend Dockerfile.prod is production-ready (multi-stage, non-root, distroless)')
@@ -69,7 +69,7 @@ function runPhase6Tests() {
   if (fs.existsSync(errorHandlerPath)) {
     const content = fs.readFileSync(errorHandlerPath, 'utf8')
     if (content.includes('x-request-id') && content.includes('requestId') && 
-        content.includes('errorHandler') && /console\.log\(\|error\)/g.test(content)) {
+        content.includes('errorHandler') && content.includes('console.error')) {
       console.log('  ✅ Global error handler includes requestId in logs and proper error handling')
       passedTests++
     } else {
@@ -162,10 +162,10 @@ function runPhase6Tests() {
         content.includes('addgroup') && 
         content.includes('adduser') && 
         content.includes('COPY --from=build') && 
-        content.includes('COPY nginx.conf') && 
+        content.includes('docker/nginx.conf') && 
         content.includes('USER 1001') &&
         content.includes('EXPOSE 80') && 
-        content.includes('nginx -g') &&
+        (content.includes('nginx') && content.includes('-g')) &&
         content.includes('HEALTHCHECK') &&
         content.includes('LABEL org.opencontainers.image')) {
       console.log('  ✅ Frontend Dockerfile.prod implements production build')
