@@ -1,8 +1,5 @@
 import { z } from 'zod'
 
-// Student profile status enum
-export const StudentProfileStatus = z.enum(['ACTIVE', 'INACTIVE', 'PENDING_VERIFICATION'])
-
 const StudentCreateSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
@@ -30,8 +27,7 @@ const StudentResponseSchema = StudentCreateSchema.extend({
   windowSize: z.number().int(),
   profile: z.object({
     id: z.string(),
-    studentId: z.string(),
-    status: StudentProfileStatus.optional()
+    studentId: z.string()
   }).optional(),
   createdAt: z.date(),
   updatedAt: z.date()
@@ -46,4 +42,3 @@ export const StudentZodSchemas = {
 export type CreateStudentDTO = z.infer<typeof StudentCreateSchema>
 export type UpdateStudentDTO = z.infer<typeof StudentUpdateSchema>
 export type StudentResponseDTO = z.infer<typeof StudentResponseSchema>
-export type StudentProfileStatus = z.infer<typeof StudentProfileStatus>

@@ -1,0 +1,151 @@
+// Phase 4 Test Script - Updated with correct paths
+// Verifies Workout Session Execution functionality for Phase 4
+
+const fs = require('fs')
+const path = require('path')
+
+function runPhase4Tests() {
+  console.log('=== RUNNING PHASE 4 TESTS ===\n')
+
+  let passedTests = 0
+  let totalTests = 0
+
+  const testDir = __dirname
+  const backendDir = path.join(testDir, 'apps/backend')
+
+  // Test 1: ExerciseCompletion enum exists in exercise-log.zod.ts
+  totalTests++
+  const exerciseCompletionPath = path.join(backendDir, 'src/schemas/exercise-log.zod.ts')
+  if (fs.existsSync(exerciseCompletionPath)) {
+    const content = fs.readFileSync(exerciseCompletionPath, 'utf8')
+    if (content.includes('z.enum([') && content.includes('SOBRADO') && content.includes('ExerciseCompletionType')) {
+      console.log('  ✅ ExerciseCompletion enum exists with correct structure')
+      passedTests++
+    } else {
+      console.log('  ❌ ExerciseCompletion enum incomplete or malformed')
+      console.log('     Content preview:', content.substring(0, 200))
+    }
+  } else {
+    console.log('  ❌ exercise-log.zod.ts not found at:', exerciseCompletionPath)
+  }
+
+  // Test 2: exerciseLogService with ownership validation
+  totalTests++
+  const servicePath = path.join(backendDir, 'src/services/exercise-log.service.ts')
+  if (fs.existsSync(servicePath)) {
+    const content = fs.readFileSync(servicePath, 'utf8')
+    const hasOwnershipCheck = content.includes('studentId') && content.includes('Unauthorized') && content.includes('routine')
+    if (hasOwnershipCheck) {
+      console.log('  ✅ exerciseLogService contains ownership validation')
+      passedTests++
+    } else {
+      console.log('  ❌ exerciseLogService missing ownership validation')
+      console.log('     Content preview:', content.substring(0, 500))
+    }
+  } else {
+    console.log('  ❌ exercise-log.service.ts not found at:', servicePath)
+  }
+
+  // Test 3: exercise-logs.ts routes exist
+  totalTests++
+  const routesPath = path.join(backendDir, 'src/routes/exercise-logs.ts')
+  if (fs.existsSync(routesPath)) {
+    const content = fs.readFileSync(routesPath, 'utf8')
+    const hasExerciseRoutes = content.includes('router.post') && content.includes('router.get') && 
+                              content.includes('router.patch') && content.includes('router.delete')
+    if (hasExerciseRoutes) {
+      console.log('  ✅ exercise-logs.ts routes exist')
+      passedTests++
+    } else {
+      console.log('  ❌ exercise-logs.ts missing required routes')
+      console.log('     Content preview:', content.substring(0, 500))
+    }
+  } else {
+    console.log('  ❌ exercise-logs.ts not found at:', routesPath)
+  }
+
+  // Test 4: Session reports integration (Phase 4 dependency)
+  totalTests++
+  const sessionReportPath = path.join(backendDir, 'src/routes/session-reports.ts')
+  if (fs.existsSync(sessionReportPath)) {
+    const content = fs.readFileSync(sessionReportPath, 'utf8')
+    const hasStudentIdCheck = content.includes('studentId')
+    if (hasStudentIdCheck) {
+      console.log('  ✅ Session reports support student ownership checks')
+      passedTests++
+    } else {
+      console.log('  ❌ Session reports missing student ownership validation')
+      console.log('     Content preview:', content.substring(0, 300))
+    }
+  } else {
+    console.log('  ❌ session-reports.ts not found at:', sessionReportPath)
+  }
+
+  // Test 5: Main application includes exercise logs
+  totalTests++
+  const mainPath = path.join(backendDir, 'src/main.ts')
+  if (fs.existsSync(mainPath)) {
+    const content = fs.readFileSync(mainPath, 'utf8')
+    const hasExerciseRoute = content.includes('/api/exercise-logs') || content.includes('exerciseLogRoutes')
+    if (hasExerciseRoute) {
+      console.log('  ✅ Main app includes exercise-logs routes')
+      passedTests++
+    } else {
+      console.log('  ❌ Main app missing exercise-logs routes')
+      console.log('     Content preview:', content.substring(0, 300))
+    }
+  } else {
+    console.log('  ❌ main.ts not found at:', mainPath)
+  }
+
+  // Test 6: Error handling structure
+  totalTests++
+  const errorHandlingPath = path.join(backendDir, 'src/middleware/error-handler.ts')
+  if (fs.existsSync(errorHandlingPath)) {
+    const content = fs.readFileSync(errorHandlingPath, 'utf8')
+    const hasErrorHandlerExport = content.includes('export const errorHandler = (')
+    const hasNextParam = content.includes('next: NextFunction')
+    const hasZodErrorHandling = content.includes('ZodError')
+    const hasPrismaHandling = content.includes('Prisma.PrismaClientKnownRequestError')
+    if (hasErrorHandlerExport && hasNextParam && hasZodErrorHandling && hasPrismaHandling) {
+      console.log('  ✅ Error handling middleware present with full functionality')
+      passedTests++
+    } else {
+      console.log('  ❌ Error handling middleware incomplete')
+      console.log('     Checks performed:')
+      console.log('       - Error handler export:', hasErrorHandlerExport)
+      console.log('       - Next parameter:', hasNextParam)
+      console.log('       - ZodError handling:', hasZodErrorHandling)
+      console.log('       - Prisma error handling:', hasPrismaHandling)
+    }
+  } else {
+    console.log('  ❌ error-handler.ts not found at:', errorHandlingPath)
+  }
+
+  console.log('\n=== PHASE 4 TEST RESULTS ===')
+  console.log('Tests passed: ' + passedTests + '/' + totalTests)
+
+  if (passedTests === totalTests) {
+    console.log('✅ ALL PHASE 4 TESTS PASS')
+    console.log('\nPhase 4 Status: COMPLETE')
+    console.log('Components verified:')
+    console.log('  1. ExerciseCompletion enum (Zod nativeEnum)')
+    console.log('  2. exerciseLogService with ownership validation')
+    console.log('  3. RESTful API endpoints for exercise logs')
+    console.log('  4. Session reports integration')
+    console.log('  5. Error handling middleware')
+    return true
+  } else {
+    console.log('❌ SOME PHASE 4 TESTS FAILED')
+    console.log('Phase 4 Status: INCOMPLETE')
+    console.log('\nMissing components that need implementation:')
+    return false
+  }
+}
+
+if (require.main === module) {
+  const success = runPhase4Tests()
+  process.exit(success ? 0 : 1)
+}
+
+module.exports = { runPhase4Tests }

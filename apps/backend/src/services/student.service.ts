@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client')
+const { calculateWindowSize } = require('./student-calculations')
 
 const prisma = new PrismaClient()
 
@@ -14,7 +15,7 @@ async function createStudent(data) {
         lifestyle: data.lifestyle,
         limitations: data.limitations,
         weeklyFrequency: data.weeklyFrequency,
-        windowSize: data.weeklyFrequency * 2,
+        windowSize: calculateWindowSize(data.weeklyFrequency),
         profile: {
           create: {
             status: 'ACTIVE'
@@ -71,7 +72,7 @@ async function updateStudent(id, data) {
 
   const updateData = { ...data }
   if (data.weeklyFrequency) {
-    updateData.windowSize = data.weeklyFrequency * 2
+    updateData.windowSize = calculateWindowSize(data.weeklyFrequency)
   }
 
   const updatedStudent = await prisma.student.update({
