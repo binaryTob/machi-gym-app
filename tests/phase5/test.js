@@ -10,8 +10,10 @@ function runPhase5Tests() {
   let passedTests = 0
   let totalTests = 0
 
-  const backendDir = path.join(__dirname, '../apps/backend')
-  const frontendDir = path.join(__dirname, '../apps/frontend/src')
+  // Use process.cwd() to get the correct working directory
+  const cwd = process.cwd()
+  const backendDir = path.join(cwd, 'apps/backend')
+  const frontendDir = path.join(cwd, 'apps/frontend/src')
 
   // Test 1: Session reports DTO schema exists
   totalTests++
@@ -125,7 +127,7 @@ function runPhase5Tests() {
 
   // Test 8: Frontend package.json includes needed dependencies
   totalTests++
-  const frontendPackagePath = path.join(__dirname, '../apps/frontend/package.json')
+  const frontendPackagePath = path.join(cwd, 'apps/frontend/package.json')
   if (fs.existsSync(frontendPackagePath)) {
     const content = fs.readFileSync(frontendPackagePath, 'utf8')
     if (content.includes('date-fns') && content.includes('zod') && content.includes('react-hook-form')) {
