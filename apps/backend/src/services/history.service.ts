@@ -1,9 +1,8 @@
-"use strict";
-const { PrismaClient } = require('@prisma/client')
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-async function getRecentSessions(studentId) {
+export async function getRecentSessions(studentId: string) {
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     select: { windowSize: true }
@@ -27,7 +26,7 @@ async function getRecentSessions(studentId) {
           name: true,
           reps: true,
           sets: true,
-          exerciseLogs: {
+          logs: {
             select: {
               id: true,
               exerciseId: true,
@@ -37,13 +36,7 @@ async function getRecentSessions(studentId) {
           }
         }
       },
-      student: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true
-        }
-      }
+      studentId: true
     },
     orderBy: [{ generatedAt: 'desc' }],
     take: limit
@@ -55,25 +48,22 @@ async function getRecentSessions(studentId) {
       id: true,
       content: true,
       createdAt: true,
-      student: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true
-        }
-      }
+      studentId: true
     },
     orderBy: [{ createdAt: 'desc' }],
     take: limit
   })
 
+  const studentInfo = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { id: true, firstName: true, lastName: true }
+  })
+
   const history = {
-    student: routines[0]?.student || sessionReports[0]?.student,
+    student: studentInfo,
     routines,
     sessionReports
   }
 
   return history
 }
-
-module.exports = { getRecentSessions }

@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExerciseCompletion {
+  SOBRADO
+  AL_LIMITE
+  CON_DIFICULTAD
+  NO_PUDO_TERMINARLO_BIEN
+}
+
+enum IntegrationStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  ERROR
+}
+
+model Student {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  firstName       String
+  lastName        String
+  height          Int
+  age             Int
+  lifestyle       String
+  limitations     String?
+  weeklyFrequency Int      @default(3)
+  windowSize      Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profile         StudentProfile?
+  routines        Routine[]
+  sessionReports  SessionReport[]
+  exerciseLogs    ExerciseLog[]
+  integrationLogs IntegrationLog[]
+
+  @@index([email])
+  @@index([weeklyFrequency])
+  @@map("students")
+}
+
+model StudentProfile {
+  id        String   @id @default(cuid())
+  studentId String   @unique
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("student_profiles")
+}
+
+model Routine {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      String   @default("ACTIVE")
+  generatedAt DateTime @default(now())
+  n8nRunId    String?
+  exercises   Exercise[]
+
+  @@index([studentId, status])
+  @@index([generatedAt])
+  @@map("routines")
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  routineId   String
+  routine     Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  name        String
+  sets        Int
+  reps        String
+  restSeconds Int      @default(90)
+  order       Int
+  logs        ExerciseLog[]
+
+  @@index([routineId, order])
+  @@map("exercises")
+}
+
+model ExerciseLog {
+  id              String             @id @default(cuid())
+  exerciseId      String
+  exercise        Exercise           @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  completion      ExerciseCompletion
+  actualSets      Int?
+  actualReps      String?
+  weightKg        Decimal?           @db.Decimal(5,2)
+  rpe             Int?
+  notes           String?
+  performedAt     DateTime           @default(now())
+
+  @@index([studentId, performedAt])
+  @@index([exerciseId, performedAt])
+  @@map("exercise_logs")
+}
+
+model SessionReport {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([studentId, createdAt])
+  @@map("session_reports")
+}
+
+model IntegrationLog {
+  id            String            @id @default(cuid())
+  studentId     String?
+  student       Student?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  routineId     String?
+  payload       Json
+  response      Json?
+  status        IntegrationStatus @default(PENDING)
+  errorMessage  String?
+  retryCount    Int               @default(0)
+  webhookUrl    String
+  callbackUrl   String
+  startedAt     DateTime          @default(now())
+  completedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([studentId, status])
+  @@index([routineId])
+  @@index([status, retryCount])
+  @@index([createdAt])
+  @@map("integration_logs")
+}

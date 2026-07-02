@@ -1,9 +1,9 @@
-const { PrismaClient } = require('@prisma/client')
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-async function createExerciseLog(data) {
-  const { exerciseId, studentId, completion, routineId, ...rest } = data
+async function createExerciseLog(data: any) {
+  const { exerciseId, studentId, completion, ...rest } = data
 
   const exercise = await prisma.exercise.findUnique({
     where: { id: exerciseId },
@@ -18,7 +18,6 @@ async function createExerciseLog(data) {
     data: {
       exerciseId,
       studentId,
-      routineId: routineId || exercise.routineId,
       completion,
       actualSets: rest.actualSets,
       actualReps: rest.actualReps,
@@ -28,11 +27,9 @@ async function createExerciseLog(data) {
       performedAt: new Date()
     },
     include: {
-      exercise: true,
-      routine: {
+      exercise: {
         include: {
-          student: true,
-          exercises: true
+          routine: true
         }
       },
       student: true
@@ -44,15 +41,13 @@ async function createExerciseLog(data) {
   return exerciseLog
 }
 
-async function getExerciseLogById(id, studentId) {
+async function getExerciseLogById(id: string, studentId: string) {
   const exerciseLog = await prisma.exerciseLog.findUnique({
     where: { id },
     include: {
-      exercise: true,
-      routine: {
+      exercise: {
         include: {
-          student: true,
-          exercises: true
+          routine: true
         }
       },
       student: true
@@ -66,7 +61,7 @@ async function getExerciseLogById(id, studentId) {
   return exerciseLog
 }
 
-async function updateExerciseLog(id, studentId, data) {
+async function updateExerciseLog(id: string, studentId: string, data: any) {
   const exerciseLog = await prisma.exerciseLog.findUnique({
     where: { id },
     include: {
@@ -85,8 +80,11 @@ async function updateExerciseLog(id, studentId, data) {
     where: { id },
     data,
     include: {
-      exercise: true,
-      routine: true,
+      exercise: {
+        include: {
+          routine: true
+        }
+      },
       student: true
     }
   })
@@ -96,23 +94,21 @@ async function updateExerciseLog(id, studentId, data) {
   return updatedExerciseLog
 }
 
-async function getAllExerciseLogs(studentId, routineId = null) {
-  const whereClause = {
+async function getAllExerciseLogs(studentId: string, routineId: string | null = null) {
+  const whereClause: any = {
     studentId
   }
 
   if (routineId) {
-    whereClause.routineId = routineId
+    whereClause.exercise = { routineId }
   }
 
   return await prisma.exerciseLog.findMany({
     where: whereClause,
     include: {
-      exercise: true,
-      routine: {
+      exercise: {
         include: {
-          student: true,
-          exercises: true
+          routine: true
         }
       }
     },
@@ -122,7 +118,7 @@ async function getAllExerciseLogs(studentId, routineId = null) {
   })
 }
 
-async function deleteExerciseLog(id, studentId) {
+async function deleteExerciseLog(id: string, studentId: string) {
   const exerciseLog = await prisma.exerciseLog.findUnique({
     where: { id },
     include: {
@@ -144,13 +140,20 @@ async function deleteExerciseLog(id, studentId) {
   return exerciseLog
 }
 
-async function updateRoutineStatusIfCompleted(routineId) {
-  const completedExercises = await prisma.exerciseLog.count({
-    where: { routineId, completion: { not: null } }
-  })
-
+async function updateRoutineStatusIfCompleted(routineId: string) {
   const totalExercises = await prisma.exercise.count({
     where: { routineId }
+  })
+
+  const exercises = await prisma.exercise.findMany({
+    where: { routineId },
+    select: { id: true }
+  })
+
+  const completedExercises = await prisma.exerciseLog.count({
+    where: {
+      exerciseId: { in: exercises.map(e => e.id) }
+    }
   })
 
   if (completedExercises === totalExercises && totalExercises > 0) {
@@ -166,7 +169,7 @@ async function updateRoutineStatusIfCompleted(routineId) {
   }
 }
 
-module.exports = {
+export {
   createExerciseLog,
   getExerciseLogById,
   updateExerciseLog,

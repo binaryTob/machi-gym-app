@@ -10,7 +10,7 @@ validation steps
 
 TODO: Implement Phase 1 verification tests
 This file stub is part of the scaffolding
-"
+`;
 
 // Test phase1 health checks
 import { runPhase1HealthChecks } from '../../scripts/health-check.js'

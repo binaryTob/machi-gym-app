@@ -1,6 +1,6 @@
 version: '3.8'
 
-x-services:
+services:
   postgres:
     image: postgres:16-alpine
     container_name: gym-postgres
@@ -33,51 +33,9 @@ x-services:
     networks:
       - gym-network
 
-  backend:
-    build:
-      context: ./apps/backend
-      dockerfile: Dockerfile.dev
-    container_name: gym-backend
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gym_app
-      REDIS_URL: redis://redis:6379
-      N8N_WEBHOOK_URL: http://n8n:5678/webhook/gym-routine
-      N8N_CALLBACK_SECRET: \${N8N_CALLBACK_SECRET}
-      BACKEND_URL: http://localhost:4000
-      FRONTEND_URL: http://localhost:3000
-      NODE_ENV: development
-      PORT: 4000
-    ports:
-      - "4000:4000"
-    volumes:
-      - ./apps/backend:/app
-      - /app/node_modules
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - gym-network
-    command: yarn dev
+volumes:
+  postgres_data:
 
-  frontend:
-    build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile.dev
-    container_name: gym-frontend
-    environment:
-      VITE_API_URL: http://localhost:4000
-      VITE_WS_URL: ws://localhost:4000
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./apps/frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-    networks:
-      - gym-network
-    command: yarn dev
-
-docker-compose.yml is a critical infrastructure file for Phase 1 - fail fast detection at startup without running tests
+networks:
+  gym-network:
+    driver: bridge

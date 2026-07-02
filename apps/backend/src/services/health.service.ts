@@ -47,10 +47,11 @@ export async function readinessCheck(req: Request, res: Response): Promise<void>
         n8n: 'ok'
       }
     })
-  } catch (error) {
+  }   catch (error) {
     res.status(503).json({
       status: 'not ready',
-      timestamp: new Date().toISOString(),n      error: 'Readiness check failed'
+      timestamp: new Date().toISOString(),
+      error: 'Readiness check failed'
     })
   }
 }

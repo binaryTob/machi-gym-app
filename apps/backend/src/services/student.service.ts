@@ -1,9 +1,9 @@
-const { PrismaClient } = require('@prisma/client')
-const { calculateWindowSize } = require('./student-calculations')
+import { PrismaClient } from '@prisma/client'
+import { calculateWindowSize } from './student-calculations'
 
 const prisma = new PrismaClient()
 
-async function createStudent(data) {
+async function createStudent(data: any) {
   const transactionResult = await prisma.$transaction([
     prisma.student.create({
       data: {
@@ -17,9 +17,7 @@ async function createStudent(data) {
         weeklyFrequency: data.weeklyFrequency,
         windowSize: calculateWindowSize(data.weeklyFrequency),
         profile: {
-          create: {
-            status: 'ACTIVE'
-          }
+          create: {}
         }
       },
       include: {
@@ -45,7 +43,7 @@ async function getAllStudents() {
   return students.map(transformStudentToResponseDTO)
 }
 
-async function getStudentById(id) {
+async function getStudentById(id: string) {
   const student = await prisma.student.findUnique({
     where: { id },
     include: {
@@ -60,7 +58,7 @@ async function getStudentById(id) {
   return transformStudentToResponseDTO(student)
 }
 
-async function updateStudent(id, data) {
+async function updateStudent(id: string, data: any) {
   const student = await prisma.student.findUnique({
     where: { id },
     include: { profile: true }
@@ -86,7 +84,7 @@ async function updateStudent(id, data) {
   return transformStudentToResponseDTO(updatedStudent)
 }
 
-async function deleteStudent(id) {
+async function deleteStudent(id: string) {
   const student = await prisma.student.findUnique({
     where: { id }
   })
@@ -102,7 +100,7 @@ async function deleteStudent(id) {
   return transformStudentToResponseDTO(student)
 }
 
-function transformStudentToResponseDTO(student) {
+function transformStudentToResponseDTO(student: any) {
   return {
     id: student.id,
     email: student.email,
@@ -114,19 +112,18 @@ function transformStudentToResponseDTO(student) {
     limitations: student.limitations,
     weeklyFrequency: student.weeklyFrequency,
     windowSize: student.windowSize,
-    profile: student.profile
-      ? {
-          id: student.profile.id,
-          studentId: student.profile.studentId,
-          status: student.profile.status
-        }
-      : undefined,
+      profile: student.profile
+        ? {
+            id: student.profile.id,
+            studentId: student.profile.studentId
+          }
+        : undefined,
     createdAt: student.createdAt,
     updatedAt: student.updatedAt
   }
 }
 
-module.exports = {
+export {
   createStudent,
   getAllStudents,
   getStudentById,

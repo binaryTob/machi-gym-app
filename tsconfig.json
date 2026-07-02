@@ -1,29 +1,7 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "rootDir": ".",
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "allowJs": false,
-    "declaration": false,
-    "sourceMap": false,
-    "incremental": false,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tests"
+  "files": [],
+  "references": [
+    { "path": "./apps/backend" },
+    { "path": "./apps/frontend" }
   ]
 }

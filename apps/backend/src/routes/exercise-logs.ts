@@ -1,75 +1,81 @@
-const express = require('express')
-const { validateBody, validateParams } = require('../middleware/validate')
-const { ExerciseCompletion } = require('../schemas/exercise-log.zod')
-const { createExerciseLog, getExerciseLogById, updateExerciseLog, getAllExerciseLogs, deleteExerciseLog } = require('../services/exercise-log.service')
+import { Router, Request, Response } from 'express'
+import { z } from 'zod'
+import { validateBody, validateParams } from '../middleware/validate'
+import { ExerciseCompletion } from '../schemas/exercise-log.zod'
+import { createExerciseLog, getExerciseLogById, updateExerciseLog, getAllExerciseLogs, deleteExerciseLog } from '../services/exercise-log.service'
 
-const router = express.Router()
+const router = Router()
+const idParamSchema = z.object({ id: z.string() })
 
-router.post('/', validateBody(ExerciseCompletion), async (req, res) => {
+router.post('/', validateBody(ExerciseCompletion), async (req: Request, res: Response) => {
   try {
     const exerciseLog = await createExerciseLog(req.body)
     res.status(201).json(exerciseLog)
-  } catch (error) {
-    if (error.message.includes('Unauthorized')) {
-      return res.status(403).json({ error: error.message })
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message.includes('Unauthorized')) {
+      return res.status(403).json({ error: err.message })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-router.get('/:id', validateParams({ id: ExerciseCompletion.shape.id }), async (req, res) => {
+router.get('/:id', validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
-    const exerciseLog = await getExerciseLogById(req.params.id, req.body.studentId)
+    const exerciseLog = await getExerciseLogById(req.params.id!, req.body.studentId)
     res.json(exerciseLog)
-  } catch (error) {
-    if (error.message.includes('Unauthorized')) {
-      return res.status(403).json({ error: error.message })
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message.includes('Unauthorized')) {
+      return res.status(403).json({ error: err.message })
     }
-    if (error.message === 'Exercise log not found') {
-      return res.status(404).json({ error: error.message })
+    if (err.message === 'Exercise log not found') {
+      return res.status(404).json({ error: err.message })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-router.patch('/:id', validateParams({ id: ExerciseCompletion.shape.id }), async (req, res) => {
+router.patch('/:id', validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
-    const exerciseLog = await updateExerciseLog(req.params.id, req.body.studentId, req.body)
+    const exerciseLog = await updateExerciseLog(req.params.id!, req.body.studentId, req.body)
     res.json(exerciseLog)
-  } catch (error) {
-    if (error.message.includes('Unauthorized')) {
-      return res.status(403).json({ error: error.message })
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message.includes('Unauthorized')) {
+      return res.status(403).json({ error: err.message })
     }
-    if (error.message === 'Exercise log not found') {
-      return res.status(404).json({ error: error.message })
+    if (err.message === 'Exercise log not found') {
+      return res.status(404).json({ error: err.message })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const { studentId, routineId } = req.query
-    const exerciseLogs = await getAllExerciseLogs(studentId, routineId)
+    const { studentId, routineId } = req.query as { studentId?: string; routineId?: string }
+    const exerciseLogs = await getAllExerciseLogs(studentId!, routineId)
     res.json(exerciseLogs)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message })
   }
 })
 
-router.delete('/:id', validateParams({ id: ExerciseCompletion.shape.id }), async (req, res) => {
+router.delete('/:id', validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
-    const exerciseLog = await deleteExerciseLog(req.params.id, req.body.studentId)
+    const exerciseLog = await deleteExerciseLog(req.params.id!, req.body.studentId)
     res.json({ message: 'Exercise log deleted successfully', exerciseLog })
-  } catch (error) {
-    if (error.message.includes('Unauthorized')) {
-      return res.status(403).json({ error: error.message })
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message.includes('Unauthorized')) {
+      return res.status(403).json({ error: err.message })
     }
-    if (error.message === 'Exercise log not found') {
-      return res.status(404).json({ error: error.message })
+    if (err.message === 'Exercise log not found') {
+      return res.status(404).json({ error: err.message })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-module.exports = router
+export default router

@@ -1,5 +1,6 @@
-"use strict";
-module.exports = {
+import { z } from 'zod'
+
+export const StudentCreateSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email format'),
@@ -12,16 +13,16 @@ module.exports = {
   weeklyFrequency: z.number().int().refine(val => [3, 5].includes(val), {
     message: 'Weekly frequency must be 3 or 5'
   })
-}
+})
 
-const StudentUpdateSchema = StudentCreateSchema.partial().extend({
+export const StudentUpdateSchema = StudentCreateSchema.partial().extend({
   email: StudentCreateSchema.shape.email.optional(),
   height: StudentCreateSchema.shape.height.optional(),
   age: StudentCreateSchema.shape.age.optional(),
   lifestyle: StudentCreateSchema.shape.lifestyle.optional()
-});
+})
 
-const StudentResponseSchema = StudentCreateSchema.extend({
+export const StudentResponseSchema = StudentCreateSchema.extend({
   id: z.string(),
   windowSize: z.number().int(),
   profile: z.object({
@@ -30,13 +31,13 @@ const StudentResponseSchema = StudentCreateSchema.extend({
   }).optional(),
   createdAt: z.date(),
   updatedAt: z.date()
-});
+})
 
 export const StudentZodSchemas = {
   CreateStudentDTO: StudentCreateSchema,
   UpdateStudentDTO: StudentUpdateSchema,
   StudentResponseDTO: StudentResponseSchema
-};
+}
 
 export type CreateStudentDTO = z.infer<typeof StudentCreateSchema>
 export type UpdateStudentDTO = z.infer<typeof StudentUpdateSchema>

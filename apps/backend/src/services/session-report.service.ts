@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client')
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-async function createSessionReport(data) {
+async function createSessionReport(data: any) {
   const student = await prisma.student.findUnique({
     where: { id: data.studentId }
   })
@@ -28,7 +28,7 @@ async function createSessionReport(data) {
   })
 }
 
-async function getSessionReportsByStudent(studentId) {
+async function getSessionReportsByStudent(studentId: string) {
   const student = await prisma.student.findUnique({
     where: { id: studentId }
   })
@@ -52,7 +52,7 @@ async function getSessionReportsByStudent(studentId) {
   })
 }
 
-async function deleteSessionReport(id) {
+async function deleteSessionReport(id: string) {
   const sessionReport = await prisma.sessionReport.findUnique({
     where: { id }
   })
@@ -68,7 +68,7 @@ async function deleteSessionReport(id) {
   return sessionReport
 }
 
-module.exports = {
+export {
   createSessionReport,
   getSessionReportsByStudent,
   deleteSessionReport

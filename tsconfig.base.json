@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "declaration": false,
+    "sourceMap": false,
+    "paths": {
+      "@backend/*": ["./apps/backend/src/*"],
+      "@frontend/*": ["./apps/frontend/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "tests"]
+}

@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import { execSync } from 'child_process'
 import { join } from 'path'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync } from 'fs'
 
 const projectRoot = join(__dirname, '../..')
 
@@ -38,11 +38,11 @@ describe('Phase 3: Rutinas & n8n Integration Verification', () => {
       if (filePattern.includes('/*')) {
         const globPath = filePattern.replace('/*', '/*.ts')
         const fullPath = join(projectRoot, globPath)
-        const files = fullPath.split(path.sep).filter(f => f.includes('*'))
+        const files = fullPath.split('/').filter(f => f.includes('*'))
       } else {
         const fullPath = join(projectRoot, filePattern)
         if (!existsSync(fullPath)) {
-          throw new Error(`Required Phase 3 file not found: ${filePattern}")
+          throw new Error('Required Phase 3 file not found: ' + filePattern)
         }
       }
     })

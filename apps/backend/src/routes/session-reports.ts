@@ -1,58 +1,64 @@
-import express from 'express'
-import { validateBody, validateParams } = require('../middleware/validate')
-import { sessionReportZodSchemas } = require('../schemas/session-report.zod')
-const { createSessionReport, getSessionReportsByStudent, deleteSessionReport } = require('../services/session-report.service')
+import { Router, Request, Response } from 'express'
+import { z } from 'zod'
+import { validateBody, validateParams } from '../middleware/validate'
+import { sessionReportZodSchemas } from '../schemas/session-report.zod'
+import { createSessionReport, getSessionReportsByStudent, deleteSessionReport } from '../services/session-report.service'
+import { getRecentSessions } from '../services/history.service'
 
-const router = express.Router()
+const router = Router()
+const idParamSchema = z.object({ id: z.string() })
+const studentIdParamSchema = z.object({ studentId: z.string() })
 
-router.post('/', validateBody(sessionReportZodSchemas.CreateSessionReportDTO), async (req, res) => {
+router.post('/', validateBody(sessionReportZodSchemas.CreateSessionReportDTO), async (req: Request, res: Response) => {
   try {
     const sessionReport = await createSessionReport(req.body)
     res.status(201).json(sessionReport)
-  } catch (error) {
-    if (error.message === 'Student not found') {
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message === 'Student not found') {
       return res.status(404).json({ error: 'Student not found' })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-router.get('/student/:studentId', validateParams({ studentId: sessionReportZodSchemas.CreateSessionReportDTO.shape.studentId }), async (req, res) => {
+router.get('/student/:studentId', validateParams(studentIdParamSchema), async (req: Request, res: Response) => {
   try {
-    const sessionReports = await getSessionReportsByStudent(req.params.studentId)
+    const sessionReports = await getSessionReportsByStudent(req.params.studentId!)
     res.json(sessionReports)
-  } catch (error) {
-    if (error.message === 'Student not found') {
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message === 'Student not found') {
       return res.status(404).json({ error: 'Student not found' })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
- router.delete('/:id', validateParams({ id: sessionReportZodSchemas.CreateSessionReportDTO.shape.id }), async (req, res) => {
+router.delete('/:id', validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
-    const sessionReport = await deleteSessionReport(req.params.id)
+    const sessionReport = await deleteSessionReport(req.params.id!)
     res.json({ message: 'Session report deleted successfully', sessionReport })
-  } catch (error) {
-    if (error.message === 'Session report not found') {
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message === 'Session report not found') {
       return res.status(404).json({ error: 'Session report not found' })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-// GET /api/students/:id/history - Get student's recent sessions
-router.get('/students/:id/history', validateParams({ id: sessionReportZodSchemas.CreateSessionReportDTO.shape.id }), async (req, res) => {
+router.get('/students/:id/history', validateParams(idParamSchema), async (req: Request, res: Response) => {
   try {
-    const { HistoryService } = await import('../services/history.service')
-    const history = await HistoryService.getRecentSessions(req.params.id)
+    const history = await getRecentSessions(req.params.id!)
     res.json(history)
-  } catch (error) {
-    if (error.message === 'Student not found') {
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message === 'Student not found') {
       return res.status(404).json({ error: 'Student not found' })
     }
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: err.message })
   }
 })
 
-module.exports = router
+export default router

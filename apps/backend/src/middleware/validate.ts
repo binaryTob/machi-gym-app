@@ -1,14 +1,16 @@
-const { CreateStudentDTO, UpdateStudentDTO, StudentResponseDTO } = require('../schemas/student.zod')
+import type { Request, Response, NextFunction } from 'express'
+import type { ZodSchema } from 'zod'
 
-function validateBody(schema) {
-  return (req, res, next) => {
+export function validateBody(schema: ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body)
       next()
-    } catch (error) {
+    } catch (error: unknown) {
+      const zodError = error as { errors: Array<{ path: (string | number)[]; message: string }> }
       return res.status(400).json({
         error: 'Validation error',
-        details: error.errors.map(e => ({
+        details: zodError.errors.map((e: { path: (string | number)[]; message: string }) => ({
           path: e.path.join('.'),
           message: e.message
         }))
@@ -17,15 +19,16 @@ function validateBody(schema) {
   }
 }
 
-function validateParams(idSchema) {
-  return (req, res, next) => {
+export function validateParams(schema: ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.params = idSchema.parse(req.params)
+      req.params = schema.parse(req.params) as any
       next()
-    } catch (error) {
+    } catch (error: unknown) {
+      const zodError = error as { errors: Array<{ path: (string | number)[]; message: string }> }
       return res.status(400).json({
         error: 'Invalid parameters',
-        details: error.errors.map(e => ({
+        details: zodError.errors.map((e: { path: (string | number)[]; message: string }) => ({
           path: e.path.join('.'),
           message: e.message
         }))
@@ -33,5 +36,3 @@ function validateParams(idSchema) {
     }
   }
 }
-
-module.exports = { validateBody, validateParams }

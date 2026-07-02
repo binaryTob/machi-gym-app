@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && npx tsc && vite build",
+    "build": "yarn typecheck && yarn tsc && vite build",
     "lint": "eslint src",
-    "typecheck": "npx tsc --noEmit",
+    "typecheck": "yarn tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1,13 +1,13 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { History } from './pages/History'
+import Home from './pages/Home'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/students/:studentId/history" element={<History />} />
-        <Route path="*" element={<Navigate to="/students/current-student/history" replace />} />
       </Routes>
     </BrowserRouter>
   )

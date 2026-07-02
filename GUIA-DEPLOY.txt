@@ -1,0 +1,248 @@
+============================================================
+  GUIA DE DESPLIEGUE - MACHI GYM APP
+============================================================
+
+Requisitos:
+  - Node.js 20+
+  - yarn 1.22+ (classic)
+  - Docker + Docker Compose
+  - Git
+
+============================================================
+  1. DESARROLLO LOCAL
+============================================================
+
+1.1 Clonar e instalar dependencias:
+
+  git clone <repo-url> gym-app
+  cd gym-app
+  cd apps/backend && yarn && cd ../..
+  cd apps/frontend && yarn && cd ../..
+
+1.2 Iniciar base de datos y Redis:
+
+  docker compose up -d
+
+1.3 Configurar variables de entorno:
+
+  cp apps/backend/.env.example apps/backend/.env
+
+  Editar apps/backend/.env:
+    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/gym_app
+    REDIS_URL=redis://localhost:6379
+    NODE_ENV=development
+    PORT=4000
+
+1.4 Generar Prisma y crear tablas:
+
+  cd apps/backend
+  yarn prisma generate
+  yarn prisma db push
+  cd ../..
+
+1.5 (Opcional) Poblar base de datos con datos de prueba:
+
+  cd apps/backend
+  yarn ts-node src/scripts/seed.ts
+  cd ../..
+
+1.6 Iniciar servidores:
+
+  Terminal 1 - Backend (puerto 4000):
+    cd apps/backend && yarn dev
+
+  Terminal 2 - Frontend (puerto 5173):
+    cd apps/frontend && yarn dev
+
+  El frontend en :5173 tiene un proxy configurado (vite.config.ts)
+  que redirige /api/* y /health/* al backend en :4000.
+
+1.7 Abrir en el navegador:
+
+  http://localhost:5173
+
+  La pagina redirige automaticamente a /students/current-student/history
+
+1.8 Verificar que el backend responde:
+
+  curl http://localhost:4000/health
+  curl http://localhost:4000/health/ready
+  curl http://localhost:4000/api/students
+
+============================================================
+  2. COMANDOS UTILES
+============================================================
+
+  Build completo (root):
+    yarn build              (typecheck + compilar backend + build frontend)
+
+  Backend (apps/backend):
+    yarn dev                (iniciar con hot-reload)
+    yarn build              (compilar a dist/)
+    yarn typecheck          (solo typecheck)
+    yarn prisma generate    (generar Prisma Client)
+    yarn prisma db push     (sincronizar schema con BD)
+    yarn prisma studio      (abrir UI de Prisma)
+
+  Frontend (apps/frontend):
+    yarn dev                (Vite dev server, proxy /api -> :4000)
+    yarn build              (build produccion)
+    yarn preview            (preview del build)
+
+============================================================
+  3. PRODUCCION - DOCKER COMPOSE
+============================================================
+
+3.1 Crear archivo docker-compose.prod.yml:
+
+  services:
+    postgres:
+      image: postgres:16-alpine
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: gym_app
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      networks:
+        - gym-network
+
+    redis:
+      image: redis:7-alpine
+      networks:
+        - gym-network
+
+    backend:
+      build:
+        context: ./apps/backend
+        dockerfile: Dockerfile.prod
+      environment:
+        DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/gym_app
+        REDIS_URL: redis://redis:6379
+        NODE_ENV: production
+        PORT: 4000
+      ports:
+        - "4000:4000"
+      depends_on:
+        postgres:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+      networks:
+        - gym-network
+
+    frontend:
+      build:
+        context: ./apps/frontend
+        dockerfile: Dockerfile.prod
+      ports:
+        - "80:80"
+      depends_on:
+        - backend
+      networks:
+        - gym-network
+
+  volumes:
+    postgres_data:
+
+  networks:
+    gym-network:
+      driver: bridge
+
+3.2 Crear archivo .env.production:
+
+  POSTGRES_PASSWORD=tu-password-segura
+  N8N_CALLBACK_SECRET=tu-hmac-secret
+
+3.3 Desplegar:
+
+  docker compose -f docker-compose.prod.yml up -d --build
+
+3.4 Ejecutar migraciones:
+
+  docker compose -f docker-compose.prod.yml exec backend yarn prisma db push
+
+3.5 (Opcional) Poblar BD:
+
+  docker compose -f docker-compose.prod.yml exec backend yarn ts-node src/scripts/seed.ts
+
+============================================================
+  4. PRODUCCION - VPS (SERVIDOR SIMPLE)
+============================================================
+
+  4.1 Instalar Docker:
+    curl -fsSL https://get.docker.com | sh
+    sudo usermod -aG docker $USER
+    (cerrar sesion y volver a entrar)
+
+  4.2 Clonar repositorio:
+    git clone <repo-url> gym-app
+    cd gym-app
+
+  4.3 Crear .env.production con las variables de entorno
+
+  4.4 Desplegar:
+    docker compose -f docker-compose.prod.yml up -d --build
+
+  4.5 SSL con Let's Encrypt (opcional):
+    sudo apt install nginx certbot python3-certbot-nginx
+    sudo certbot --nginx -d gym.tudominio.com
+
+============================================================
+  5. PRODUCCION - BUILD MANUAL (SIN DOCKER)
+============================================================
+
+  5.1 Compilar backend:
+    cd apps/backend
+    yarn build
+    # El resultado queda en apps/backend/dist/
+
+  5.2 Compilar frontend:
+    cd apps/frontend
+    yarn build
+    # El resultado queda en apps/frontend/dist/
+
+  5.3 Servir el frontend con nginx:
+    server {
+        listen 80;
+        server_name gym.tudominio.com;
+        root /ruta/a/apps/frontend/dist;
+        index index.html;
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+        location /api/ {
+            proxy_pass http://localhost:4000;
+            proxy_set_header Host $host;
+        }
+    }
+
+  5.4 Iniciar backend:
+    cd apps/backend
+    node dist/main.js
+
+============================================================
+  6. SOLUCION DE PROBLEMAS
+============================================================
+
+  Error: "Environment variable not found: DATABASE_URL"
+    -> Crear apps/backend/.env con DATABASE_URL correcta
+
+  Error: "prisma: command not found"
+    -> cd apps/backend && yarn add -D prisma@5
+
+  Error de conexion a BD
+    -> Verificar que PostgreSQL esta corriendo: docker compose ps
+    -> Verificar DATABASE_URL en .env usa "localhost" no "postgres"
+
+  Pagina en blanco / no carga
+    -> Abrir la consola del navegador (F12) para ver errores
+    -> Verificar que el backend esta corriendo (puerto 4000)
+    -> El frontend usa vite.config.ts con proxy a :4000
+    -> Si hay error CORS, el proxy de Vite deberia resolverlo
+
+  Error al hacer yarn (peer dependencies)
+    -> Ya resuelto: @mui/icons-material agregado explicitamente,
+       eslint-plugin-react-hooks actualizado a v5
+
+============================================================
