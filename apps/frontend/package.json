@@ -1,19 +1,19 @@
-"use strict";
-module.exports = {
+{
   "name": "gym-app-frontend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run typecheck && npx tsc && vite build",
     "lint": "eslint src",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npx tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.21.0",
+    "@mui/icons-material": "^5.17.1",
     "@mui/material": "^5.17.1",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
@@ -36,8 +36,8 @@ module.exports = {
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.15.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.6.2",

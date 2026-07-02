@@ -1,0 +1,40 @@
+.history-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1a1a2e;
+}
+
+.history-header {
+  margin-bottom: 2rem;
+}
+
+.history-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.student-info {
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.loading, .error, .no-history {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.125rem;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.loading {
+  color: #64748b;
+}
+
+.no-history {
+  color: #94a3b8;
+}

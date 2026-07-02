@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { SessionTimeline } from '../components/SessionTimeline'
+import SessionTimeline from '../components/SessionTimeline'
 import { useHistory } from '../hooks/useHistory'
 import './History.css'
 
 export function History() {
   const { studentId } = useParams<{ studentId: string }>()
-  const { history, isLoading, error, fetchHistory } = useHistory(studentId)
-  
+  const { history, isLoading, error, fetchHistory } = useHistory()
+
   useEffect(() => {
     if (studentId) {
       fetchHistory(studentId)
     }
   }, [studentId, fetchHistory])
-  
+
   if (isLoading) {
     return (
       <div className="history-page">
@@ -21,7 +21,7 @@ export function History() {
       </div>
     )
   }
-  
+
   if (error) {
     return (
       <div className="history-page">
@@ -29,7 +29,7 @@ export function History() {
       </div>
     )
   }
-  
+
   if (!history) {
     return (
       <div className="history-page">
@@ -37,7 +37,7 @@ export function History() {
       </div>
     )
   }
-  
+
   return (
     <div className="history-page">
       <header className="history-header">
@@ -46,7 +46,7 @@ export function History() {
           <span>{history.student?.firstName} {history.student?.lastName}</span>
         </div>
       </header>
-      
+
       <main className="history-content">
         <SessionTimeline sessions={history} />
       </main>

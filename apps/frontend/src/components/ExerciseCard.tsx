@@ -1,13 +1,25 @@
-import react from 'react'
 import { useState } from 'react'
-import { ExerciseCompletion } from '../../schemas/exercise-log.zod'
-import { CompleteWorkoutSessionPage } from '../../pages/WorkoutSession'
 
-export function ExerciseCard({ exercise, routineId, onCompletionUpdate }) {
+const COMPLETION_OPTIONS = ['SOBRADO', 'AL_LIMITE', 'CON_DIFICULTAD', 'NO_PUDO_TERMINARLO_BIEN'] as const
+
+type ExerciseCardProps = {
+  exercise: {
+    id: string
+    name: string
+    sets: number
+    reps: string
+    restSeconds: number
+    currentCompletion?: string
+  }
+  routineId: string
+  onCompletionUpdate?: (exerciseId: string, result: any) => void
+}
+
+export function ExerciseCard({ exercise, routineId, onCompletionUpdate }: ExerciseCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [completion, setCompletion] = useState(exercise.currentCompletion || '')
-  
-  const handleCompletionChange = async (newCompletion) => {
+
+  const handleCompletionChange = async (newCompletion: string) => {
     setIsLoading(true)
     try {
       const response = await fetch('/api/exercise-logs', {
@@ -16,11 +28,11 @@ export function ExerciseCard({ exercise, routineId, onCompletionUpdate }) {
         body: JSON.stringify({
           exerciseId: exercise.id,
           routineId,
-          studentId: 'current-student', // TODO: get from auth context
+          studentId: 'current-student',
           completion: newCompletion
         })
       })
-      
+
       if (response.ok) {
         const result = await response.json()
         onCompletionUpdate?.(exercise.id, result)
@@ -38,7 +50,7 @@ export function ExerciseCard({ exercise, routineId, onCompletionUpdate }) {
     <div className="exercise-card">
       <h3>{exercise.name}</h3>
       <p>Sets: {exercise.sets}, Reps: {exercise.reps}, Rest: {exercise.restSeconds}s</p>
-      
+
       <div className="completion-selector">
         <label htmlFor={`completion-${exercise.id}`}>Completion Status:</label>
         <select
@@ -48,12 +60,12 @@ export function ExerciseCard({ exercise, routineId, onCompletionUpdate }) {
           disabled={isLoading}
         >
           <option value="">Select status...</option>
-          {Object.values(ExerciseCompletion).map((status) => (
+          {COMPLETION_OPTIONS.map((status) => (
             <option key={status} value={status}>{status}</option>
           ))}
         </select>
       </div>
-      
+
       {isLoading && <div className="loading">Saving...</div>}
     </div>
   )
