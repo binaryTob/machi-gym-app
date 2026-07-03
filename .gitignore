@@ -55,3 +55,4 @@ yarn.lock
 
 # Prisma
 prisma/generated/
+.gstack/

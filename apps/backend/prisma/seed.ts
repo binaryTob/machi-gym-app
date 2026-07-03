@@ -19,6 +19,7 @@ async function main() {
       lifestyle: 'activo',
       limitations: null,
       weeklyFrequency: 3,
+      windowSize: 6,
     },
     {
       email: 'student2@gym.com',
@@ -29,6 +30,7 @@ async function main() {
       lifestyle: 'sedentario',
       limitations: 'rodilla izquierda',
       weeklyFrequency: 5,
+      windowSize: 10,
     },
     {
       email: 'student3@gym.com',
@@ -39,6 +41,7 @@ async function main() {
       lifestyle: 'muy_activo',
       limitations: null,
       weeklyFrequency: 3,
+      windowSize: 6,
     },
     {
       email: 'student4@gym.com',
@@ -49,6 +52,7 @@ async function main() {
       lifestyle: 'activo',
       limitations: 'lesiones en el brazo derecho',
       weeklyFrequency: 5,
+      windowSize: 10,
     },
     {
       email: 'student5@gym.com',
@@ -59,6 +63,7 @@ async function main() {
       lifestyle: 'muy_activo',
       limitations: null,
       weeklyFrequency: 3,
+      windowSize: 6,
     },
   ]
 
@@ -104,7 +109,8 @@ async function main() {
   for (const routine of allRoutines) {
     const exerciseCount = Math.floor(Math.random() * 5) + 3 // 3-7 exercises per routine
     for (let i = 0; i < exerciseCount; i++) {
-      const template = exerciseTemplates[Math.floor(Math.random() * exerciseTemplates.length)]
+      const idx = Math.floor(Math.random() * exerciseTemplates.length)
+      const template = exerciseTemplates[idx]!
       await prisma.exercise.create({
         data: {
           routineId: routine.id,
@@ -137,7 +143,6 @@ async function main() {
       data: {
         exerciseId: exercise.id,
         studentId: student.id,
-        routineId: routine.id,
         completion: completionOptions[Math.floor(Math.random() * completionOptions.length)],
         actualSets: Math.floor(Math.random() * 3) + 1,
         actualReps: `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 10) + 8}`, // Variations like "8-12"

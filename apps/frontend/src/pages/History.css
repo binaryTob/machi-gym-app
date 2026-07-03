@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: system-ui, -apple-system, sans-serif;
-  color: #1a1a2e;
+  color: #e0e0e0;
 }
 
 .history-header {
@@ -14,11 +14,12 @@
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0 0 0.5rem;
+  color: #e0e0e0;
 }
 
 .student-info {
   font-size: 1rem;
-  color: #64748b;
+  color: #9e9e9e;
 }
 
 .loading, .error, .no-history {
@@ -28,13 +29,13 @@
 }
 
 .error {
-  color: #dc2626;
+  color: #f87171;
 }
 
 .loading {
-  color: #64748b;
+  color: #9e9e9e;
 }
 
 .no-history {
-  color: #94a3b8;
+  color: #6b7280;
 }
